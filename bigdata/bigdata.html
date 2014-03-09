@@ -1,0 +1,30 @@
+<head>
+  <title>bigdata</title>
+</head>
+
+<body>
+  {{> eleves }}
+</body>
+
+<template name="eleves">
+  <h3>Eleves :</h3>
+  <ul>
+    {{#isolate}}
+      {{#each eAll}}
+        <li>
+        <h4>{{ login }}</h4>
+          {{> friends}}
+        </li>
+      {{/each}}
+    {{/isolate}}
+  </ul>
+</template>
+
+<template name="friends">
+  <ul>
+    {{#each parseFriends friends}}
+      <li>{{ login }} : <b>{{ value }}</b></li>
+    {{/each}}
+  </ul>
+
+</template>
