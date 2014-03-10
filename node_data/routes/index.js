@@ -2,78 +2,153 @@ module.exports = function(app) {
   var mongoose = require('mongoose'),
    	  _ = require('underscore'),
    	  async = require('async'),
-   	  Poste = require('../classes/poste'),
       Eleves = mongoose.models.presence_log,
       route = {};
 
-	// index.html
-	route.index = function (req, res) {
-	  res.render('home', {locals: { routes: app.routes }});
-	};
 
-
-  route.showAll = function(req, res)
+Poste = function(poste)
   {
-  	var eleves_l = Eleves.find({});//.limit(20);
-  	var eleves_lc = Eleves.count({});//.limit(20);
+    this.fqn = poste;
+    if (poste != undefined)
+    {
+      parts = poste.split(/[rep]/);
+      this.etage = parseInt(parts[1]);
+      this.rangee = parseInt(parts[2]);
+      this.poste = parseInt(parts[3]);
+      if (this.poste <= 23 && this.poste >= 17)
+      {
+        this.side = "right";
+      }
+      /* todo... */
+    }
+  }
+
+  Poste.prototype.toString = function()
+  {
+    return ("e" + this.etage + "r" + this.rangee + "p" + this.poste);
+  }
+
+  Poste.prototype.getPostes = function()
+  {
+    liste = [];
+    if (this.poste < 23)
+    {
+      liste.push("e" + this.etage + "r" + this.rangee + "p" + (this.poste + 1));
+      if (this.rangee < 13)
+      {
+        liste.push("e" + this.etage + "r" + (this.rangee + 1) + "p" + (this.poste + 1));
+      }
+      if (this.rangee > 1)
+      {
+        liste.push("e" + this.etage + "r" + (this.rangee - 1) + "p" + (this.poste + 1));
+      }
+    }
+    if (this.poste > 0)
+    {
+      liste.push("e" + this.etage + "r" + this.rangee + "p" + (this.poste - 1));
+      if (this.rangee < 13)
+      {
+        liste.push("e" + this.etage + "r" + (this.rangee + 1) + "p" + (this.poste - 1));
+      }
+      if (this.rangee > 1)
+      {
+        liste.push("e" + this.etage + "r" + (this.rangee - 1) + "p" + (this.poste - 1));
+      }
+    }
+    return (liste);
+  };
+
+  Fetcher = function(predicate)
+  {
+  	if (predicate == null || predicate == undefined)
+  	{
+  		predicate = {};
+  	}
+  	else if (typeof(predicate) == "string")
+  	{
+  		predicate = {
+  			login: predicate,
+  			$and: [
+	        	{poste: { $ne: "None" }},
+	        	{poste: { $ne: null }}
+	        ]
+  		};
+  	}
+
+  	this.predicate = predicate;
+  }
+
+  Fetcher.prototype.run = function(req, res)
+  {
+  	var eleves_l = Eleves.find(this.predicate);
+  	var eleves_lc = Eleves.count(this.predicate);
+
     /* On recupere toute la data */
     eleves_l.exec(function(err, el)
     {
     	eleves_lc.exec(function(err, cnt)
 	    {
 		    /* on groupe par personne */
-		    //console.log(el);
-		    elts = _.groupBy(el, function(e){ return (e.login); });
+		    console.log("[ETA] [" + (parseFloat(cnt) / 100) + " seconds]");
+		    console.log("Fetching...");
+		    var elts = _.groupBy(el, function(e){ return (e.login); });
 
-		    asyncPersonCall = [];
-		    result = [];
+		    var asyncPersonCall = [];
+		    var result = [];
 
 		    _.each(elts, function(data, login)
 		    {
 		    	asyncPersonCall.push(function(callback)
 		    	{
-					current = {
+					var current = {
 						login: login,
 						logs: data,
 						friends: []
 					};
-					result.push(current);
+					data.friends = [];
+					data.login = login;
+					result.push(data);
 					callback();
 				});
 		    });
 
-		    async.parallel(asyncPersonCall, function(){
-				console.log("all is fine !");
-				console.log("finally :", result);
+		    async.parallel(asyncPersonCall, function()
+		    {
+				// console.log("all is fine !");
+				// console.log("finally :", result);
+		    	console.log("Computing data...");
 
 
-				asyncVoisinCall = [];
+				var asyncVoisinCall = [];
 
 
 
-				_.each(result, function(data, login)
+				_.each(result, function(data, index)
 				{
+					// console.log("data = " + data);
 					_(data).each( function( v, k, d )
 					{
+							// console.log("-------- index=" + index + "| ( v=" + v + ") " + "( k=" + k + ")" + "( d=" + d + ") --------");
 						asyncVoisinCall.push(function(c)
 						{
-							console.log("-------- " + login + " ( " + k + ") --------");
-					        poste = Poste(v.poste)
-					        console.log(poste);
-					        console.log(poste.getPostes());
+					        var poste = new Poste(v.poste)
+					        // console.log(poste);
+					        // console.log(poste.getPostes());
 
-					        postes = poste.getPostes();
-					        heure = v.hour;
-					        jour = v.day;
+					        var postes = poste.getPostes();
+					        var heure = v.hour;
+					        var jour = v.day;
 
-					        voisins = Eleves.find({
+					        var voisins = Eleves.find({
 					          poste: { $in: postes },
 					          hour: heure,
 					          day: jour
-					        }, function(e)
+					        });
+
+					        voisins.exec(function(err, e)
 					        {
-						        console.log("Voisins de " + login + " -> ", voisins);
-						        data.friends = _.union(data.friends, voisins);
+						        // console.log("Voisins de " + index + " [" + postes + "] (" + jour + " - " + heure + "-> ", e);
+						        data.friends = _.union(data.friends, e);
 								c();
 					        });
 						});
@@ -81,66 +156,54 @@ module.exports = function(app) {
 
 				});
 
-				async.parallel(asyncVoisinCall, function(){
-					console.log("all is REALLY fine !");
-					console.log("finally :", result);
+				async.parallel(asyncVoisinCall, function()
+				{
+		    		console.log("Done !");
 
-					res.render('home', { eleves: result, count: cnt});
+					res.render('home', { eleves: result, count: cnt, helpers: {
+				        parseFriends: function (e)
+				        {
+						    var el = _(e).groupBy( function(value)
+						    {
+						        return(value.login);
+						    });
+				            // console.log("=> ", el);
+				            var elts = [];
+				            _(el).each( function( value, key, e )
+				            {
+				              elts.push({login: key, value: value.length});
+				            });
+				            return (elts);
+				        }
+					}});
 				});
 
 			});
-
-		    //console.log("elements :", elts);
-
-		    	console.log(elts);
-
-
-		    /* Pour chaque personne */
-		   /* _.each(elts, function(data, login)
-		    {
-
-		      current = {
-		        login: login,
-		        logs: data,
-		        friends: []
-		      };
-
-		      _(data).each( function( v, k, d )
-		      {
-		        console.log("-------- " + login + " ( " + k + ") --------");
-		        poste = Poste(v.poste)
-		        console.log(poste);
-		        console.log(poste.getPostes());
-
-		        postes = poste.getPostes();
-		        heure = v.hour;
-		        jour = v.day;
-
-		        voisins = Eleves.find({
-		          poste: { $in: postes },
-		          hour: heure,
-		          day: jour
-		        });
-
-		        console.log("Voisins de " + login + " -> ", voisins);
-		        current.friends = _.union(current.friends, voisins);
-		      });
-
-		      console.log("Tous les Voisins de " + login + " -> ", current.friends);
-		      console.log(data, login);
-		      current.friends = _(current.friends).groupBy( function(value) {
-		        return(value.login);
-		      })
-		      result.push(current);
-		    });*/
-
 	    });
     });
+  };
+
+	// index.html
+	route.index = function (req, res) {
+	  res.render('home', {locals: { routes: app.routes }});
+	};
 
 
-
+  route.searchAll = function(req, res)
+  {
+  	var request = new Fetcher({});
+  	request.run(req, res);
   }
 
 
-	app.get('/', route.showAll);
+  route.searchUser = function(req, res)
+  {
+    var user = req.params.login;
+  	var request = new Fetcher(user);
+  	request.run(req, res);
+  }
+
+	app.get('/', route.index);
+  	app.get('/search/all', route.searchAll);
+  	app.get('/search/login/:login', route.searchUser);
 };

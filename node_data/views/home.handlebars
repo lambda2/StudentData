@@ -4,5 +4,10 @@
       {{#each eleves}}
         <li>
         <h4>{{ login }}</h4>
+        <ul>
+        {{#each (parseFriends friends)}}
+            <li>{{ login }} : <b>{{ value }}</b></li>
+          {{/each}}
+        </ul>
       {{/each}}
   </ul>

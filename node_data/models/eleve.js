@@ -7,10 +7,10 @@ var mongoose = require('mongoose'),
 var fields = {
 	login: { type: String },
 	poste: { type: String },
-	day: { type: Date , default: Date.now },
+	day: { type: String },
 	hour: { type: String }
 };
 
 var eleveSchema = new Schema(fields);
 
-module.exports = mongoose.model('presence_log', eleveSchema, 'presence_test');
+module.exports = mongoose.model('presence_log', eleveSchema, 'presence_log');

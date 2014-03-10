@@ -19,6 +19,8 @@ fs.readdirSync(classesPath).forEach(function (file) {
   require(classesPath + '/' + file);
 });
 
+
+
 // Bootstrap models
 var modelsPath = path.join(__dirname, 'models');
 fs.readdirSync(modelsPath).forEach(function (file) {
