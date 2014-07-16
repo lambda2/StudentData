@@ -6,11 +6,10 @@ Gem::Specification.new do |s|
   s.name     = 'devise_ldap_authenticatable'
   s.version  = DeviseLdapAuthenticatable::VERSION.dup
   s.platform = Gem::Platform::RUBY
-  s.summary  = 'Devise extension to allow authentication via LDAP'
-  s.email = 'curtis.schiewek@gmail.com'
-  s.homepage = 'https://github.com/cschiewek/devise_ldap_authenticatable'
+  s.summary  = 'Devise extension to allow authentication via 42\'s LDAP'
+  s.email = 'andre@staff.42.fr'
   s.description = s.summary
-  s.authors = ['Curtis Schiewek', 'Daniel McNevin', 'Steven Xu']
+  s.authors = ['Curtis Schiewek', 'Daniel McNevin', 'Steven Xu', 'André Aubin']
   s.license = 'MIT'
 
   s.files         = `git ls-files`.split("\n")

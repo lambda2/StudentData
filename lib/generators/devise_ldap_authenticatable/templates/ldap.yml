@@ -1,34 +1,40 @@
-## Authorizations
-# Uncomment out the merging for each environment that you'd like to include.
-# You can also just copy and paste the tree (do not include the "authorizations") to each
-# environment if you need something different per enviornment.
 authorizations: &AUTHORIZATIONS
-  group_base: ou=groups,dc=test,dc=com
+  group_base: ou=groups,dc=42,dc=fr
   ## Requires config.ldap_check_group_membership in devise.rb be true
   # Can have multiple values, must match all to be authorized
   required_groups:
     # If only a group name is given, membership will be checked against "uniqueMember"
-    - cn=admins,ou=groups,dc=test,dc=com
-    - cn=users,ou=groups,dc=test,dc=com
+    # - cn=admin,ou=groups,dc=test,dc=com
+    # - cn=users,ou=groups,dc=test,dc=com
     # If an array is given, the first element will be the attribute to check against, the second the group name
-    - ["moreMembers", "cn=users,ou=groups,dc=test,dc=com"]
+    - ["memberUid", "cn=students,ou=groups,dc=42,dc=fr"]
   ## Requires config.ldap_check_attributes in devise.rb to be true
   ## Can have multiple attributes and values, must match all to be authorized
-  require_attribute:
-    objectClass: inetOrgPerson
-    authorizationRole: postsAdmin
+  #require_attribute:
+  #  objectClass: inetOrgPerson
+  #  authorizationRole: postsAdmin
 
 ## Environment
 
 development:
-  host: localhost
-  port: 389
-  attribute: cn
-  base: ou=people,dc=test,dc=com
-  admin_user: cn=admin,dc=test,dc=com
-  admin_password: admin_password
-  ssl: false
-  # <<: *AUTHORIZATIONS
+  student:
+    host: ldap.42.fr
+    port: 636
+    attribute: uid
+    base: dc=42,dc=fr
+    admin_user: uid=ladder,ou=applications,ou=people,dc=42,dc=fr
+    admin_password: XXXXXXXXXXXX
+    ssl: true
+    <<: *AUTHORIZATIONS
+  staff: ## Unbindable :/
+    host: dc1.staff.42.fr
+    port: 636
+    attribute: uid
+    base: dc=staff,dc=42,dc=fr
+    admin_user: uid=dashboard,ou=applications,ou=people,dc=staff,dc=42,dc=fr
+    admin_password: XXXXXXXXXXXX
+    ssl: true
+    <<: *AUTHORIZATIONS
 
 test:
   host: localhost
@@ -38,14 +44,14 @@ test:
   admin_user: cn=admin,dc=test,dc=com
   admin_password: admin_password
   ssl: simple_tls
-  # <<: *AUTHORIZATIONS
+  <<: *AUTHORIZATIONS
 
 production:
-  host: localhost
+  host: ldap.42.fr
   port: 636
-  attribute: cn
-  base: ou=people,dc=test,dc=com
-  admin_user: cn=admin,dc=test,dc=com
-  admin_password: admin_password
-  ssl: start_tls
-  # <<: *AUTHORIZATIONS
+  attribute: uid
+  base: dc=42,dc=fr
+  admin_user: uid=ladder,ou=applications,ou=people,dc=42,dc=fr
+  admin_password: XXXXXXXXXXXX
+  ssl: true
+  <<: *AUTHORIZATIONS

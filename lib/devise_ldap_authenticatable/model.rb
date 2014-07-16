@@ -27,7 +27,7 @@ module Devise
 
         Devise::LDAP::Adapter.update_own_password(login_with, @password, current_password)
       end
-      
+
       def reset_password!(new_password, new_password_confirmation)
         if new_password == new_password_confirmation && ::Devise.ldap_update_password
           Devise::LDAP::Adapter.update_password(login_with, new_password)
@@ -39,7 +39,7 @@ module Devise
       def password=(new_password)
         @password = new_password
         if defined?(password_digest) && @password.present? && respond_to?(:encrypted_password=)
-          self.encrypted_password = password_digest(@password) 
+          self.encrypted_password = password_digest(@password)
         end
       end
 
@@ -88,6 +88,7 @@ module Devise
       module ClassMethods
         # Find a user for ldap authentication.
         def find_for_ldap_authentication(attributes={})
+          puts "find_for_ldap_authentication: #{attributes}"
           auth_key = self.authentication_keys.first
           return nil unless attributes[auth_key].present?
 
@@ -104,6 +105,7 @@ module Devise
 
           if resource && resource.new_record? && resource.valid_ldap_authentication?(attributes[:password])
             resource.ldap_before_save if resource.respond_to?(:ldap_before_save)
+            puts "Authentication valide... [resource.valid_ldap_authentication => #{resource.valid_ldap_authentication?(attributes[:password])}]"
             resource.save!
           end
 
