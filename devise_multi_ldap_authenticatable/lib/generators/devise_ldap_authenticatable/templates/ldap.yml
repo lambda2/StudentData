@@ -1,0 +1,58 @@
+authorizations: &AUTHORIZATIONS
+  group_base: ou=groups,dc=42,dc=fr
+  ## Requires config.ldap_check_group_membership in devise.rb be true
+  # Can have multiple values, must match all to be authorized
+  required_groups:
+    # If only a group name is given, membership will be checked against "uniqueMember"
+    # - cn=admin,ou=groups,dc=test,dc=com
+    # - cn=users,ou=groups,dc=test,dc=com
+    # If an array is given, the first element will be the attribute to check against, the second the group name
+    - ["memberUid", "cn=students,ou=groups,dc=42,dc=fr"]
+  ## Requires config.ldap_check_attributes in devise.rb to be true
+  ## Can have multiple attributes and values, must match all to be authorized
+  #require_attribute:
+  #  objectClass: inetOrgPerson
+  #  authorizationRole: postsAdmin
+
+## Environment
+
+development:
+  - student
+    host: ldap.42.fr
+    port: 636
+    attribute: uid
+    base: dc=42,dc=fr
+    admin_user: uid=ladder,ou=applications,ou=people,dc=42,dc=fr
+    admin_password: fng2erf5@
+    ssl: true
+    <<: *AUTHORIZATIONS
+  - staff
+    host: ldaps://dc1.staff.42.fr
+    port: 636
+    attribute: uid
+    base: dc=staff,dc=42,dc=fr
+    admin_user: uid=dashboard,ou=applications,ou=people,dc=staff,dc=42,dc=fr
+    admin_password: 095b524a9b917A!f352726e62368bfb226e554c8
+    ssl: true
+    tls: true
+    <<: *AUTHORIZATIONS
+
+test:
+  host: localhost
+  port: 3389
+  attribute: cn
+  base: ou=people,dc=test,dc=com
+  admin_user: cn=admin,dc=test,dc=com
+  admin_password: admin_password
+  ssl: simple_tls
+  <<: *AUTHORIZATIONS
+
+production:
+  host: ldap.42.fr
+  port: 636
+  attribute: uid
+  base: dc=42,dc=fr
+  admin_user: uid=ladder,ou=applications,ou=people,dc=42,dc=fr
+  admin_password: fng2erf5@
+  ssl: true
+  <<: *AUTHORIZATIONS
