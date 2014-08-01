@@ -17,21 +17,21 @@ authorizations: &AUTHORIZATIONS
 ## Environment
 
 development:
+  staff: ## Unbindable :/
+    host: dc1.staff.42.fr
+    port: 636
+    attribute: uid
+    base: OU=people,DC=staff,DC=42,DC=fr
+    admin_user: cn=ruby,ou=applications,ou=people,dc=staff,dc=42,dc=fr
+    admin_password: toto42sh@
+    ssl: true
+    <<: *AUTHORIZATIONS
   student:
     host: ldap.42.fr
     port: 636
     attribute: uid
     base: dc=42,dc=fr
     admin_user: uid=ladder,ou=applications,ou=people,dc=42,dc=fr
-    admin_password: XXXXXXXXXXXX
-    ssl: true
-    <<: *AUTHORIZATIONS
-  staff: ## Unbindable :/
-    host: dc1.staff.42.fr
-    port: 636
-    attribute: uid
-    base: dc=staff,dc=42,dc=fr
-    admin_user: uid=dashboard,ou=applications,ou=people,dc=staff,dc=42,dc=fr
     admin_password: XXXXXXXXXXXX
     ssl: true
     <<: *AUTHORIZATIONS

@@ -20,7 +20,11 @@ module Devise
         @ldap.host = ldap_config["host"]
         @ldap.port = ldap_config["port"]
         @ldap.base = ldap_config["base"]
+        DeviseLdapAuthenticatable::Logger.send("\n\t[ldap.host]\t=>\t#{@ldap.host}")
+        DeviseLdapAuthenticatable::Logger.send("\t[ldap.port]\t=>\t#{@ldap.port}")
+        DeviseLdapAuthenticatable::Logger.send("\t[ldap.base]\t=>\t#{@ldap.base}")
         @attribute = ldap_config["attribute"]
+        DeviseLdapAuthenticatable::Logger.send("\t[attribute]\t=>\t#{@attribute}\n")
         @ldap_auth_username_builder = params[:ldap_auth_username_builder]
 
         @group_base = ldap_config["group_base"]
@@ -75,6 +79,7 @@ module Devise
       end
 
       def authenticate!
+        DeviseLdapAuthenticatable::Logger.send("Authenticate! #{dn}, #{@password}")
         @ldap.auth(dn, @password)
         @ldap.bind
       end

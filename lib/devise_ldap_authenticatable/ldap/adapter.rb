@@ -14,6 +14,7 @@ module Devise
                    :password => password_plaintext,
                    :ldap_auth_username_builder => ::Devise.ldap_auth_username_builder,
                    :admin => ::Devise.ldap_use_admin_to_bind}
+        puts "[Devise::LDAP:Adapter::valid_credentials? (#{login}, #{password_plaintext})]"
         self.roll_authentifications options do |resource|
           if resource.authorized? === true
             return true
@@ -62,6 +63,22 @@ module Devise
         end
       end
 
+      # Va se connecter avec password au premier ldap valide (sur lequel le login bind).
+      # Si aucun serveur est bindable, va retourner le premier de la liste.
+      def self.ldap_secure_connect(login, password_plaintext)
+        options = {:login => login,
+                   :password => password_plaintext,
+                   :ldap_auth_username_builder => ::Devise.ldap_auth_username_builder,
+                   :admin => ::Devise.ldap_use_admin_to_bind}
+
+        self.roll_authentifications options do |resource|
+          return resource if resource.valid_login?
+        end
+        self.roll_authentifications options do |resource|
+          return resource
+        end
+      end
+
       def self.valid_login?(login)
           self.ldap_connect(login).valid_login?
       end
@@ -92,6 +109,24 @@ module Devise
 
       def self.delete_ldap_param(login, param, password = nil)
         self.ldap_connect(login).delete_param(param)
+      end
+
+      def self.get_secure_ldap_param(login, password, param)
+        resource = self.ldap_secure_connect(login, password).ldap_param_value(param)
+      end
+
+      def self.get_full(login, password_plaintext)
+        options = {:login => login,
+                   :password => password_plaintext,
+                   :ldap_auth_username_builder => ::Devise.ldap_auth_username_builder,
+                   :admin => ::Devise.ldap_use_admin_to_bind}
+        puts "[Devise::LDAP:Adapter::valid_credentials? (#{login}, #{password_plaintext})]"
+        self.roll_authentifications options do |resource|
+          if resource.authorized? === true
+            return resource
+          end
+        end
+        false
       end
 
       def self.get_ldap_param(login, param)
